@@ -2,7 +2,10 @@
 package it.polito.tdp.IndovinaNumero;
 
 import java.net.URL;
+import java.security.InvalidParameterException;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.IndovinaNumero.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -10,12 +13,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 public class FXMLController {
+	
+	private Model model; //aggiunto
 
-	private final int nMax= 100;
+/*	private final int nMax= 100;
 	private final int tMax=8;
 	private int segreto;
 	private int tentativiFatti;
-	private boolean inGioco=false;
+	private boolean inGioco=false; */
 	
 	 @FXML
 	 private HBox layoutTentativo;
@@ -43,14 +48,19 @@ public class FXMLController {
 
     @FXML
     void DoNuovaPartita(ActionEvent event) {
-     //gestione inizio partita
+    /* //gestione inizio partita
     	
     	this.segreto=(int) ((Math.random()*nMax)+1); //numero casuale
     	this.tentativiFatti=0;
     	this.inGioco= true;
+    	*/
     	
-    	//gestione interfaccia 
-    	this.txtTentativi.setText(Integer.toString(tMax));
+    	this.model.nuovaPartita(); //inizio la partita, delego il model
+    	
+    	//gestione interfaccia  RIMANE QUI
+    	
+    	this.txtRisultato.setText("");
+    	this.txtTentativi.setText(Integer.toString(this.model.gettMax())); //aggiungo get
     	
     	this.layoutTentativo.setDisable(false); //riabilitare riga 
     	
@@ -65,8 +75,7 @@ public class FXMLController {
     	int tentativo;
     	
     	try {
-    		tentativo= Integer.parseInt(ts);
-    		
+    		tentativo= Integer.parseInt(ts);	
     		
     	}
     	catch(NumberFormatException e) {
@@ -74,10 +83,11 @@ public class FXMLController {
     		return;
     	}
     	
-    	this.tentativiFatti++;
-    	this.txtTentativi.setText(Integer.toString(tMax-this.tentativiFatti));
+    	this.txtTentativoUtente.setText("");
+    	 	
+    	// this.tentativiFatti++;
     	
-    	if(tentativo==this.segreto) {
+    	/*if(tentativo==this.segreto) {
     		//indovinato
     		txtRisultato.setText("Hai indovinto con "+this.tentativiFatti+" tentativi");
     		this.inGioco=false;
@@ -85,6 +95,7 @@ public class FXMLController {
     		return;
     	}
     	
+  	
     	if(this.tentativiFatti==tMax) {
     		//ho esaurito i tentativi
     		txtRisultato.setText("Hai perso, il numero era " +this.segreto);
@@ -103,10 +114,54 @@ public class FXMLController {
     		{ 
     		 txtRisultato.setText("Tentativo troppo alto");
     		
+    		}*/
+    	
+        int result;
+        
+        try {
+        result=this.model.tentativo(tentativo);
+        }
+        catch(IllegalStateException se) {
+        	
+        	this.txtRisultato.setText(se.getMessage());
+        	this.layoutTentativo.setDisable(true);
+        	return;
+        	
+        	
+        }catch(InvalidParameterException pe) {
+        	
+        	txtRisultato.setText(pe.getMessage());
+        	return;
+        }
+    	
+        
+        this.txtTentativi.setText(Integer.toString(this.model.gettMax()-this.model.getTentativiFatti()));
+        
+    	if(result==0) {
+    		
+    		txtRisultato.setText("Hai vinto con " + this.model.getTentativiFatti() + " tentativi");
+    		this.layoutTentativo.setDisable(true);
+    		
+    		
+    	}
+    	else if(result<0) {
+    		txtRisultato.setText("Tentativo troppo basso");
+    		
+    	}
+    	else
+    		{
+    		  txtRisultato.setText("Tentativo troppo alto");
+    		  
     		}
+    		
+    	
+    	//manca la parte in cui esaurisco i tentaivi -->try e catch
+    	
     	 	
 
     }
+    
+    
 
     @FXML
     void initialize() {
@@ -116,6 +171,13 @@ public class FXMLController {
         assert btnProva != null : "fx:id=\"btnProva\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtRisultato != null : "fx:id=\"txtRisultato\" was not injected: check your FXML file 'Scene.fxml'.";
 
+  
+    }
+   
+    //aggiungo , setto modello , metodo esterno
+    
+    public void setModel(Model model) {
+    	this.model=model;
     }
 }
 
